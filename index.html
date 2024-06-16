@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Adventure Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #gameMap {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            position: relative;
+            background-color: #ddd;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        #player {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 30px;
+            height: 30px;
+            background-color: blue;
+            border-radius: 50%;
+        }
+        .enemy {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: red;
+            border-radius: 50%;
+            display: none;
+        }
+        .treasure {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: gold;
+            border-radius: 50%;
+            display: none;
+        }
+        .obstacle {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: brown;
+            border-radius: 50%;
+            display: none;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Adventure Game</h1>
+        <div id="gameMap">
+            <div id="player"></div>
+            <div class="enemy"></div>
+            <div class="treasure"></div>
+            <div class="obstacle"></div>
+        </div>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        const enemies = document.querySelectorAll('.enemy');
+        const treasures = document.querySelectorAll('.treasure');
+        const obstacles = document.querySelectorAll('.obstacle');
+
+        let playerPosition = { x: 50, y: 50 };
+        let treasuresFound = 0;
+
+        function startGame() {
+            // Initialize game map
+            resetGameMap();
+
+            // Generate obstacles, enemies, and treasures randomly
+            placeRandomElements(obstacles, 5);
+            placeRandomElements(enemies, 3);
+            placeRandomElements(treasures, 2);
+
+            // Display elements on the map
+            showElements(obstacles);
+            showElements(enemies);
+            showElements(treasures);
+
+            // Update player position on map
+            updatePlayerPosition();
+        }
+
+        function resetGameMap() {
+            // Hide all elements
+            hideElements(obstacles);
+            hideElements(enemies);
+            hideElements(treasures);
+
+            // Reset player's position
+            playerPosition.x = 50;
+            playerPosition.y = 50;
+        }
+
+        function placeRandomElements(elements, count) {
+            const positions = [];
+            while (positions.length < count) {
+                const x = Math.floor(Math.random() * 20) * 30; // 20 columns, each 30px wide
+                const y = Math.floor(Math.random() * 10) * 30; // 10 rows, each 30px high
+                const position = { x, y };
+                if (!positions.some(pos => pos.x === x && pos.y === y)) {
+                    positions.push(position);
+                }
+            }
+            positions.forEach((pos, index) => {
+                const element = elements[index];
+                element.style.left = `${pos.x}px`;
+                element.style.top = `${pos.y}px`;
+            });
+        }
+
+        function showElements(elements) {
+            elements.forEach(element => {
+                element.style.display = 'block';
+            });
+        }
+
+        function hideElements(elements) {
+            elements.forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+
+        function updatePlayerPosition() {
+            player.style.left = `${playerPosition.x}px`;
+            player.style.top = `${playerPosition.y}px`;
+        }
+
+        document.addEventListener('keydown', function(event) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    movePlayer('up');
+                    break;
+                case 'ArrowDown':
+                    movePlayer('down');
+                    break;
+                case 'ArrowLeft':
+                    movePlayer('left');
+                    break;
+                case 'ArrowRight':
+                    movePlayer('right');
+                    break;
+            }
+        });
+
+        function movePlayer(direction) {
+            switch (direction) {
+                case 'up':
+                    if (playerPosition.y > 0) {
+                        playerPosition.y -= 30;
+                    }
+                    break;
+                case 'down':
+                    if (playerPosition.y < 270) {
+                        playerPosition.y += 30;
+                    }
+                    break;
+                case 'left':
+                    if (playerPosition.x > 0) {
+                        playerPosition.x -= 30;
+                    }
+                    break;
+                case 'right':
+                    if (playerPosition.x < 570) {
+                        playerPosition.x += 30;
+                    }
+                    break;
+            }
+
+            checkInteraction();
+            updatePlayerPosition();
+        }
+
+        function checkInteraction() {
+            // Check if player has encountered any treasures
+            treasures.forEach(treasure => {
+                if (isCollision(player, treasure)) {
+                    treasure.style.display = 'none';
+                    treasuresFound++;
+                    alert(`You found a treasure! Total treasures found: ${treasuresFound}`);
+                }
+            });
+
+            // Check if player has encountered any enemies
+            enemies.forEach(enemy => {
+                if (isCollision(player, enemy)) {
+                    alert("Game Over! You encountered an enemy.");
+                    startGame(); // Restart the game
+                }
+            });
+
+            // Check if player has encountered any obstacles
+            obstacles.forEach(obstacle => {
+                if (isCollision(player, obstacle)) {
+                    alert("Oops! You ran into an obstacle.");
+                    // Optional: Handle obstacle collision logic
+                }
+            });
+        }
+
+        function isCollision(player, element) {
+            const playerRect = player.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            return !(playerRect.right < elementRect.left || 
+                     playerRect.left > elementRect.right || 
+                     playerRect.bottom < elementRect.top || 
+                     playerRect.top > elementRect.bottom);
+        }
+    </script>
+</body>
+</html>
